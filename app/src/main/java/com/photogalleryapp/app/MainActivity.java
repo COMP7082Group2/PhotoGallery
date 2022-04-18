@@ -1,7 +1,5 @@
 package com.photogalleryapp.app;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.FileProvider;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -12,6 +10,14 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
+
+import com.microsoft.appcenter.AppCenter;
+import com.microsoft.appcenter.analytics.Analytics;
+import com.microsoft.appcenter.crashes.Crashes;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -37,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
         } else {
             displayPhoto(photos.get(index));
         }
+
+        AppCenter.start(getApplication(), "0d845a00-10c7-4351-bcc6-d989912ae356",
+                Analytics.class, Crashes.class);
     }
 
     public void takePhoto(View v) {
