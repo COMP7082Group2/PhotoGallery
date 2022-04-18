@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ArrayList<String> findPhotos(Date startTimestamp, Date endTimestamp, String keywords) {
         File file = new File(Environment.getExternalStorageDirectory()
-            .getAbsolutePath(), "/Android/data/com.example.myapplication/files/Pictures");
+            .getAbsolutePath(), "/Android/data/com.photogalleryapp.app/files/Pictures");
 
         ArrayList<String> photos = new ArrayList<String>();
         File[] fList = file.listFiles();
