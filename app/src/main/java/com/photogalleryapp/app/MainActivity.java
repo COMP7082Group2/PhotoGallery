@@ -85,6 +85,10 @@ public class MainActivity extends AppCompatActivity {
         return photos;
     }
 
+    public void doSearch(View v) {
+        Intent intent = new Intent(this, SearchActivity.class);
+        startActivity(intent);
+    }
 
     public void scrollPhotos(View v) {
         updatePhoto(photos.get(index), ((EditText) findViewById(R.id.etCaption)).getText().toString());
