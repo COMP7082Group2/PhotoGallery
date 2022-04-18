@@ -51,17 +51,21 @@ public class MainActivity extends AppCompatActivity {
     public void takePhoto(View v) {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            File photoFile = null; try {
+            File photoFile = null;
+            try {
                 photoFile = createImageFile();
             } catch (IOException ex) {
             // Error occurred while creating the File
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {
-                Uri photoURI = FileProvider.getUriForFile(this, "com.photogalleryapp.app.fileprovider", photoFile);
+                Uri photoURI = FileProvider.getUriForFile(this,
+                        "com.photogalleryapp.app.fileprovider",
+                        photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-            } }
+            }
+        }
     }
 
     private ArrayList<String> findPhotos(Date startTimestamp, Date endTimestamp, String keywords) {
@@ -119,9 +123,15 @@ public class MainActivity extends AppCompatActivity {
     private File createImageFile() throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "_caption_" + timeStamp + "_";
+        String imageFileName = "JPEG_" + timeStamp + "_";
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(imageFileName, ".jpg",storageDir);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
         mCurrentPhotoPath = image.getAbsolutePath();
         return image;
     }
