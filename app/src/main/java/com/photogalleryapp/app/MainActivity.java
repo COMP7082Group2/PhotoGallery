@@ -27,7 +27,7 @@ import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
-    private int SEARCH_ACTIVITY_REQUEST_CODE = 1;
+    private int SEARCH_ACTIVITY_REQUEST_CODE = 2;
     String mCurrentPhotoPath;
     private ArrayList<String> photos = null;
     private int index = 0;
@@ -87,20 +87,26 @@ public class MainActivity extends AppCompatActivity {
 
     public void doSearch(View v) {
         Intent intent = new Intent(this, SearchActivity.class);
-        startActivity(intent);
+        //startActivity(intent);
+        startActivityForResult(intent, SEARCH_ACTIVITY_REQUEST_CODE);
     }
 
     public void scrollPhotos(View v) {
-        updatePhoto(photos.get(index), ((EditText) findViewById(R.id.etCaption)).getText().toString());
+        String newPath = updatePhoto(photos.get(index), ((EditText) findViewById(R.id.etCaption)).getText().toString());
+        photos.set(index, newPath);
         switch (v.getId()) {
             case R.id.btnPrev:
                 if (index > 0) {
                     index--;
+                } else {
+                    index = photos.size() - 1;
                 }
                 break;
             case R.id.btnNext:
                 if (index < (photos.size() - 1)) {
                     index++;
+                } else {
+                    index = 0;
                 }
                 break;
             default:
@@ -127,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
     private File createImageFile() throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
+        String imageFileName = "_caption_" + timeStamp + "_";
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File image = File.createTempFile(
                 imageFileName,  /* prefix */
@@ -140,13 +146,15 @@ public class MainActivity extends AppCompatActivity {
         return image;
     }
 
-    private void updatePhoto(String path, String caption) {
+    private String updatePhoto(String path, String caption) {
         String[] attr = path.split("_");
         if (attr.length >= 3) {
             File to = new File(attr[0] + "_" + caption + "_" + attr[2] + "_" + attr[3]);
             File from = new File(path);
             from.renameTo(to);
+            return to.toString();
         }
+        return null;
     }
 
     @Override

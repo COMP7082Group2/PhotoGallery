@@ -42,7 +42,7 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     public void go(final View v) {
-        Intent i = new Intent();
+        Intent i = new Intent(this, MainActivity.class);
         EditText from = (EditText) findViewById(R.id.etFromDateTime);
         EditText to = (EditText) findViewById(R.id.etToDateTime);
         EditText keywords = (EditText) findViewById(R.id.etKeywords);
