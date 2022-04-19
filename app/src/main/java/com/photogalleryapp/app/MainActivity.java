@@ -120,7 +120,8 @@ public class MainActivity extends AppCompatActivity {
         TextView tv = (TextView) findViewById(R.id.tvTimestamp);
         EditText et = (EditText) findViewById(R.id.etCaption);
         if (path == null || path =="") {
-            iv.setImageResource(R.mipmap.ic_launcher); et.setText("");
+            iv.setImageResource(R.mipmap.ic_launcher);
+            et.setText("");
             tv.setText("");
         } else {
             iv.setImageBitmap(BitmapFactory.decodeFile(path));
@@ -135,13 +136,7 @@ public class MainActivity extends AppCompatActivity {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName = "_caption_" + timeStamp + "_";
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".jpg",         /* suffix */
-                storageDir      /* directory */
-        );
-
-        // Save a file: path for use with ACTION_VIEW intents
+        File image = File.createTempFile(imageFileName, ".jpg",storageDir);
         mCurrentPhotoPath = image.getAbsolutePath();
         return image;
     }
@@ -171,12 +166,14 @@ public class MainActivity extends AppCompatActivity {
                     startTimestamp = format.parse(from);
                     endTimestamp = format.parse(to);
                 } catch (Exception ex) {
-                    startTimestamp = null; endTimestamp = null;
+                    startTimestamp = null;
+                    endTimestamp = null;
                 }
 
                 String keywords = (String) data.getStringExtra("KEYWORDS");
                 index = 0;
                 photos = findPhotos(startTimestamp, endTimestamp, keywords);
+
                 if (photos.size() == 0) {
                     displayPhoto(null);
                 } else {
