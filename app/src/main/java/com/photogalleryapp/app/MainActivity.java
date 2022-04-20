@@ -21,8 +21,10 @@ import com.microsoft.appcenter.crashes.Crashes;
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
@@ -62,6 +64,12 @@ public class MainActivity extends AppCompatActivity {
                 Uri photoURI = FileProvider.getUriForFile(this,
                         "com.photogalleryapp.app.fileprovider",
                         photoFile);
+
+                photos.add(photoFile.getPath());
+                index = photos.size() - 1;
+
+                EditText et = (EditText) findViewById(R.id.etCaption);
+                et.setText("caption");
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             }
@@ -72,14 +80,32 @@ public class MainActivity extends AppCompatActivity {
         File file = new File(Environment.getExternalStorageDirectory()
             .getAbsolutePath(), "/Android/data/com.photogalleryapp.app/files/Pictures");
 
+        String currentImage = (photos == null || index >= photos.size()) ? null : photos.get(index);
         ArrayList<String> photos = new ArrayList<String>();
         File[] fList = file.listFiles();
+
+        DateFormat format = new SimpleDateFormat("yyyyMMdd_HHmmss");
+
         if (fList != null) {
-            for (File f : fList) {
-                if (((startTimestamp == null && endTimestamp == null) ||
-                    (f.lastModified() >= startTimestamp.getTime() && f.lastModified() <= endTimestamp.getTime())
-                ) && (keywords == "" || f.getPath().contains(keywords)))
-                    photos.add(f.getPath());
+            try {
+                for (File f : fList) {
+
+                    String[] attr = f.getPath().split("_");
+                    String fileName = attr[2] + "_" + attr[3];
+
+                    Date fileDate = format.parse(fileName);
+
+                    if (((startTimestamp == null && endTimestamp == null) ||
+                            (fileDate.getTime() >= startTimestamp.getTime() && fileDate.getTime() <= endTimestamp.getTime())
+                    ) && (keywords == "" || f.getPath().contains(keywords))) {
+                        if(currentImage != null && f.getPath().compareTo(currentImage) == 0)
+                            index = photos.size();
+
+                        photos.add(f.getPath());
+                    }
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
             }
         }
         return photos;
@@ -133,8 +159,9 @@ public class MainActivity extends AppCompatActivity {
 
     private File createImageFile() throws IOException {
         // Create an image file name
+        EditText et = (EditText) findViewById(R.id.etCaption);
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "_caption_" + timeStamp + "_";
+        String imageFileName = "_caption_" + timeStamp + "_"; //date_caption_####_time_randomNumber
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File image = File.createTempFile(imageFileName, ".jpg",storageDir);
         mCurrentPhotoPath = image.getAbsolutePath();
@@ -143,8 +170,13 @@ public class MainActivity extends AppCompatActivity {
 
     private String updatePhoto(String path, String caption) {
         String[] attr = path.split("_");
+
         if (attr.length >= 3) {
-            File to = new File(attr[0] + "_" + caption + "_" + attr[2] + "_" + attr[3]);
+            String newName = attr[0] + "_" + caption + "_" + attr[2] + "_" + attr[3];
+            if(!newName.endsWith(".jpg"))
+                newName = newName + ".jpg";
+
+            File to = new File(newName);
             File from = new File(path);
             from.renameTo(to);
             return to.toString();
