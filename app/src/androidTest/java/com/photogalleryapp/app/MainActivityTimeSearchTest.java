@@ -53,7 +53,7 @@ public class MainActivityTimeSearchTest {
         imgDir.mkdirs();
 
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        File imageFileName = new File(imgDir, "_oldImage_" + "19920219_101010.jpg");
+        File imageFileName = new File(imgDir, "_oldImage_" + "19880219_101010.jpg");
         Bitmap bmp = Bitmap.createBitmap(800, 600, Bitmap.Config.RGB_565);
 
         bmp.eraseColor(Color.RED);
@@ -79,12 +79,12 @@ public class MainActivityTimeSearchTest {
         materialButton.perform(click());
 
         ViewInteraction appCompatEditText2 = onView(withId(R.id.etFromDateTime));
-        appCompatEditText2.perform(replaceText("1990‐01‐17 05:00:00"));
+        appCompatEditText2.perform(replaceText("1980‐01‐17 05:00:00"));
         appCompatEditText2.perform(closeSoftKeyboard());
 
 
         ViewInteraction appCompatEditText7 = onView(withId(R.id.etToDateTime));
-        appCompatEditText7.perform(replaceText("1995‐20‐20 06:00:00"));
+        appCompatEditText7.perform(replaceText("1989‐20‐20 06:00:00"));
         appCompatEditText7.perform(closeSoftKeyboard());
 
         ViewInteraction materialButton2 = onView(
