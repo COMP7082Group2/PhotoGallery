@@ -1,7 +1,13 @@
 package com.photogalleryapp.app;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
+import android.location.Location;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -12,8 +18,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.microsoft.appcenter.AppCenter;
 import com.microsoft.appcenter.analytics.Analytics;
 import com.microsoft.appcenter.crashes.Crashes;
@@ -24,7 +35,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
@@ -34,10 +44,14 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> photos = null;
     private int index = 0;
 
+    private LocationTracker tracker = new LocationTracker();
+
+    @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //Load photos stored in the server
         photos = findPhotos(new Date(Long.MIN_VALUE), new Date(), "");
 
         if (photos.size() == 0) {
@@ -48,6 +62,22 @@ public class MainActivity extends AppCompatActivity {
 
         AppCenter.start(getApplication(), "0d845a00-10c7-4351-bcc6-d989912ae356",
                 Analytics.class, Crashes.class);
+
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            requestPermissions(new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 10);
+        }
+        locationManager.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER, 5000, 10, tracker);
+
     }
 
     public void takePhoto(View v) {
@@ -57,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 photoFile = createImageFile();
             } catch (IOException ex) {
-            // Error occurred while creating the File
+                // Error occurred while creating the File
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {
@@ -78,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ArrayList<String> findPhotos(Date startTimestamp, Date endTimestamp, String keywords) {
         File file = new File(Environment.getExternalStorageDirectory()
-            .getAbsolutePath(), "/Android/data/com.photogalleryapp.app/files/Pictures");
+                .getAbsolutePath(), "/Android/data/com.photogalleryapp.app/files/Pictures");
 
         String currentImage = (photos == null || index >= photos.size()) ? null : photos.get(index);
         ArrayList<String> photos = new ArrayList<String>();
@@ -98,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
                     if (((startTimestamp == null && endTimestamp == null) ||
                             (fileDate.getTime() >= startTimestamp.getTime() && fileDate.getTime() <= endTimestamp.getTime())
                     ) && (keywords == "" || f.getPath().contains(keywords))) {
-                        if(currentImage != null && f.getPath().compareTo(currentImage) == 0)
+                        if (currentImage != null && f.getPath().compareTo(currentImage) == 0)
                             index = photos.size();
 
                         photos.add(f.getPath());
@@ -142,18 +172,31 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void displayPhoto(String path) {
-        ImageView iv = (ImageView) findViewById(R.id.ivGallery);
-        TextView tv = (TextView) findViewById(R.id.tvTimestamp);
-        EditText et = (EditText) findViewById(R.id.etCaption);
-        if (path == null || path =="") {
-            iv.setImageResource(R.mipmap.ic_launcher);
-            et.setText("");
-            tv.setText("");
+        ImageView iv_gallery = (ImageView) findViewById(R.id.ivGallery);
+        TextView tv_timestamp = (TextView) findViewById(R.id.tvTimestamp);
+        EditText et_caption = (EditText) findViewById(R.id.etCaption);
+        TextView tv_location = (TextView) findViewById(R.id.tvLocation);
+        if (path == null || path == "") {
+            iv_gallery.setImageResource(R.mipmap.ic_launcher);
+            et_caption.setText("");
+            tv_timestamp.setText("");
+            tv_location.setText("");
         } else {
-            iv.setImageBitmap(BitmapFactory.decodeFile(path));
+            iv_gallery.setImageBitmap(BitmapFactory.decodeFile(path));
             String[] attr = path.split("_");
-            et.setText(attr[1]);
-            tv.setText(attr[2]);
+            et_caption.setText(attr[1]);
+
+            DateFormat format = new SimpleDateFormat("yyyyMMdd_HHmmss");
+            DateFormat dest = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
+            try {
+                Date d = format.parse(attr[2] + "_" + attr[3]);
+
+                tv_timestamp.setText(dest.format(d));
+            } catch (ParseException e) {
+                tv_timestamp.setText("Invalid Date");
+            }
+            if (attr.length > 4)
+                tv_location.setText(attr[4] + " / " + attr[5].replace(".jpg", ""));
         }
     }
 
@@ -161,9 +204,16 @@ public class MainActivity extends AppCompatActivity {
         // Create an image file name
         EditText et = (EditText) findViewById(R.id.etCaption);
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "_caption_" + timeStamp + "_"; //date_caption_####_time_randomNumber
+
+        Location lastKnown = tracker.getLocation();
+        String imageFileName = "_caption_" + timeStamp + "_"; //_caption_date_time_latitude_longitude_random#
+
+        if (lastKnown != null) {
+            imageFileName += lastKnown.getLatitude() + "_" + lastKnown.getLongitude() + "_";
+        }
+
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(imageFileName, ".jpg",storageDir);
+        File image = File.createTempFile(imageFileName, ".jpg", storageDir);
         mCurrentPhotoPath = image.getAbsolutePath();
         return image;
     }
@@ -171,8 +221,8 @@ public class MainActivity extends AppCompatActivity {
     private String updatePhoto(String path, String caption) {
         String[] attr = path.split("_");
 
-        if (attr.length >= 3) {
-            String newName = attr[0] + "_" + caption + "_" + attr[2] + "_" + attr[3];
+        if (attr.length >= 4) {
+            String newName = attr[0] + "_" + caption + "_" + attr[2] + "_" + attr[3] + "_" + attr[4] + "_" + attr[5];
             if(!newName.endsWith(".jpg"))
                 newName = newName + ".jpg";
 
