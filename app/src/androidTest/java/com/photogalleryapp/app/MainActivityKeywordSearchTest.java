@@ -52,8 +52,11 @@ public class MainActivityKeywordSearchTest {
 
         imgDir.mkdirs();
 
+        String log = "49.28373802133578";
+        String lat = "123.11467544444673";
+        String fileNameFormat = "_testKeyword_" + "19930419_101010_" + log + "_"+ lat +".jpg";
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        File imageFileName = new File(imgDir, "_testKeyword_" + "19930419_101010");
+        File imageFileName = new File(imgDir, fileNameFormat);
         Bitmap bmp = Bitmap.createBitmap(800, 600, Bitmap.Config.RGB_565);
 
         bmp.eraseColor(Color.BLUE);
@@ -69,22 +72,11 @@ public class MainActivityKeywordSearchTest {
     public void mainActivityKeywordSearchTest() {
         ViewInteraction materialButton = onView(
                 allOf(withId(R.id.btnSearch), withText("search"),
-                        childAtPosition(
-                                allOf(withId(R.id.constraintLayoutLayout),
-                                        childAtPosition(
-                                                withId(android.R.id.content),
-                                                0)),
-                                6),
                         isDisplayed()));
         materialButton.perform(click());
 
         ViewInteraction appCompatEditText = onView(
                 allOf(withId(R.id.etKeywords),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                5),
                         isDisplayed()));
         appCompatEditText.perform(replaceText("testKeyword"), closeSoftKeyboard());
 
@@ -100,11 +92,6 @@ public class MainActivityKeywordSearchTest {
 
         ViewInteraction materialButton2 = onView(
                 allOf(withId(R.id.go), withText("Go"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                7),
                         isDisplayed()));
         materialButton2.perform(click());
 

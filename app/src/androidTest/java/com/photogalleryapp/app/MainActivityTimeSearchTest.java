@@ -52,8 +52,10 @@ public class MainActivityTimeSearchTest {
 
         imgDir.mkdirs();
 
-        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        File imageFileName = new File(imgDir, "_oldImage_" + "19880219_101010.jpg");
+        String log = "49.28373802133578";
+        String lat = "123.11467544444673";
+        String fileNameFormat = "_oldImage_" + "19830419_101010_" + log + "_"+ lat +".jpg";
+        File imageFileName = new File(imgDir, fileNameFormat);
         Bitmap bmp = Bitmap.createBitmap(800, 600, Bitmap.Config.RGB_565);
 
         bmp.eraseColor(Color.RED);
@@ -69,12 +71,6 @@ public class MainActivityTimeSearchTest {
     public void mainActivityTimeSearchTest() {
         ViewInteraction materialButton = onView(
                 allOf(withId(R.id.btnSearch), withText("search"),
-                        childAtPosition(
-                                allOf(withId(R.id.constraintLayoutLayout),
-                                        childAtPosition(
-                                                withId(android.R.id.content),
-                                                0)),
-                                6),
                         isDisplayed()));
         materialButton.perform(click());
 
@@ -89,11 +85,6 @@ public class MainActivityTimeSearchTest {
 
         ViewInteraction materialButton2 = onView(
                 allOf(withId(R.id.go), withText("Go"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                7),
                         isDisplayed()));
         materialButton2.perform(click());
 
