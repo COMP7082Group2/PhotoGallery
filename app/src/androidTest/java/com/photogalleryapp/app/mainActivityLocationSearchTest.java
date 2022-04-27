@@ -52,8 +52,8 @@ public class mainActivityLocationSearchTest {
 
         String log = "49.28373802133578";
         String lat = "123.11467544444673";
-        File imageFileName = new File(imgDir,
-                "_testLocation_" + "20220426_230934_" + log + "_"+ lat + ".jpg");
+        String fileNameFormat = "_testKeyword_" + "19930419_101010_" + log + "_"+ lat +".jpg";
+        File imageFileName = new File(imgDir, fileNameFormat);
         Bitmap bmp = Bitmap.createBitmap(800, 600, Bitmap.Config.RGB_565);
 
         bmp.eraseColor(Color.GREEN);
@@ -81,7 +81,6 @@ public class mainActivityLocationSearchTest {
         ViewInteraction appCompatEditText2 = onView(withId(R.id.etFromDateTime));
         appCompatEditText2.perform(replaceText("2022‐04‐01 00:00:00"));
         appCompatEditText2.perform(closeSoftKeyboard());
-
 
         ViewInteraction appCompatEditText7 = onView(withId(R.id.etToDateTime));
         appCompatEditText7.perform(replaceText("2022-05‐01 00:00:00"));
