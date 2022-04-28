@@ -5,7 +5,10 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
@@ -274,6 +277,20 @@ public class MainActivity extends AppCompatActivity {
             return to.toString();
         }
         return null;
+    }
+    public void shareImageFile(View v) {
+        ImageView iv = (ImageView) findViewById(R.id.ivGallery);
+        Drawable mDrawable = iv.getDrawable();
+        Bitmap mBitmap = ((BitmapDrawable) mDrawable).getBitmap();
+        String[] attr = photos.get(index).split("_");
+        String path = MediaStore.Images.Media.insertImage(getContentResolver(), mBitmap, attr[attr.length-1], null);
+
+        Uri uri = Uri.parse(path);
+        Intent shareIntent = new Intent();
+        shareIntent.setAction(Intent.ACTION_SEND);
+        shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+        shareIntent.setType("image/jpeg");
+        startActivity(Intent.createChooser(shareIntent, null));
     }
 
     @Override
