@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private int index = 0;
 
     private LocationTracker tracker = new LocationTracker();
+    private Location lastKnown;
 
     @SuppressLint("NewApi")
     @Override
@@ -52,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         //Load photos stored in the server
-        photos = findPhotos(new Date(Long.MIN_VALUE), new Date(), "");
+        photos = findPhotos(new Date(Long.MIN_VALUE), new Date(), "", "", "");
 
         if (photos.size() == 0) {
             displayPhoto(null);
@@ -106,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private ArrayList<String> findPhotos(Date startTimestamp, Date endTimestamp, String keywords) {
+    private ArrayList<String> findPhotos(Date startTimestamp, Date endTimestamp, String keywords, String latitude, String longitude) {
         File file = new File(Environment.getExternalStorageDirectory()
                 .getAbsolutePath(), "/Android/data/com.photogalleryapp.app/files/Pictures");
 
@@ -115,6 +116,15 @@ public class MainActivity extends AppCompatActivity {
         File[] fList = file.listFiles();
 
         DateFormat format = new SimpleDateFormat("yyyyMMdd_HHmmss");
+        double searchLongitude, searchLatitude;
+        //Location searchLocation;
+
+        searchLongitude = (longitude != "") ? Double.parseDouble(longitude) : 0;
+        searchLatitude = (latitude != "") ? Double.parseDouble(latitude) : 0;
+        //searchLocation = new Location("Search Location");
+        //searchLocation.setLongitude(searchLongitude);
+        //searchLocation.setLatitude(searchLatitude);
+
 
         if (fList != null) {
             try {
@@ -123,11 +133,40 @@ public class MainActivity extends AppCompatActivity {
                     String[] attr = f.getPath().split("_");
                     String fileName = attr[2] + "_" + attr[3];
 
+                    double fileLongitude = 0, fileLatitude = 0;
+
+                    if (attr.length > 4) {
+                        fileLatitude = Double.parseDouble(attr[4]);
+                    }
+                    if (attr.length > 5) {
+                        fileLongitude = Double.parseDouble(attr[5].replace(".jpg", ""));
+                    }
+                    // if keyword coordinates were not specified, add the file to the list.
+                    if (longitude == "") {
+                        searchLongitude = fileLongitude;
+                    }
+                    if (latitude == "") {
+                        searchLatitude = fileLatitude;
+                    }
+                    //Location fileLocation = new Location("File Location");
+                    //fileLocation.setLongitude(fileLongitude);
+                    //fileLocation.setLatitude(fileLatitude);
+
+                    float[] result = new float[1];
+                    Location.distanceBetween(fileLatitude, fileLongitude, searchLatitude, searchLongitude, result);
+                    boolean within50km = false;
+
+                    if (result[0] < 50000) {
+                        // distance between first and second location is less than 50km
+                        within50km = true;
+                    }
+                    //39.256 123.210
                     Date fileDate = format.parse(fileName);
 
                     if (((startTimestamp == null && endTimestamp == null) ||
                             (fileDate.getTime() >= startTimestamp.getTime() && fileDate.getTime() <= endTimestamp.getTime())
-                    ) && (keywords == "" || f.getPath().contains(keywords))) {
+                    ) && (keywords == "" || f.getPath().contains(keywords))
+                            && within50km) {
                         if (currentImage != null && f.getPath().compareTo(currentImage) == 0)
                             index = photos.size();
 
@@ -143,6 +182,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void doSearch(View v) {
         Intent intent = new Intent(this, SearchActivity.class);
+        lastKnown = tracker.getLocation();
+        intent.putExtra("CURR_LONGITUDE", lastKnown.getLongitude() + "");
+        intent.putExtra("CURR_LATITUDE", lastKnown.getLatitude() + "");
         //startActivity(intent);
         startActivityForResult(intent, SEARCH_ACTIVITY_REQUEST_CODE);
     }
@@ -196,7 +238,7 @@ public class MainActivity extends AppCompatActivity {
                 tv_timestamp.setText("Invalid Date");
             }
             if (attr.length > 4)
-                tv_location.setText(attr[4] + " / " + attr[5].replace(".jpg", ""));
+                tv_location.setText("(Lat) " + attr[4] + "\n(Lng) " + attr[5].replace(".jpg", ""));
         }
     }
 
@@ -205,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
         EditText et = (EditText) findViewById(R.id.etCaption);
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 
-        Location lastKnown = tracker.getLocation();
+        lastKnown = tracker.getLocation();
         String imageFileName = "_caption_" + timeStamp + "_"; //_caption_date_time_latitude_longitude_random#
 
         if (lastKnown != null) {
@@ -239,6 +281,7 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == SEARCH_ACTIVITY_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
+                //Timestamp
                 DateFormat format = new SimpleDateFormat("yyyy‐MM‐dd HH:mm:ss");
                 Date startTimestamp , endTimestamp;
 
@@ -251,10 +294,15 @@ public class MainActivity extends AppCompatActivity {
                     startTimestamp = null;
                     endTimestamp = null;
                 }
+                //Location
+                String longitude = (String) data.getStringExtra("LONGITUDE");
+                String latitude = (String) data.getStringExtra("LATITUDE");
 
+
+                //Keyword
                 String keywords = (String) data.getStringExtra("KEYWORDS");
                 index = 0;
-                photos = findPhotos(startTimestamp, endTimestamp, keywords);
+                photos = findPhotos(startTimestamp, endTimestamp, keywords, latitude, longitude);
 
                 if (photos.size() == 0) {
                     displayPhoto(null);
@@ -266,7 +314,14 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             ImageView mImageView = (ImageView) findViewById(R.id.ivGallery);
             mImageView.setImageBitmap(BitmapFactory.decodeFile(mCurrentPhotoPath));
-            photos = findPhotos(new Date(Long.MIN_VALUE), new Date(), "");
+
+            TextView tv_timestamp = (TextView) findViewById(R.id.tvTimestamp);
+            TextView tv_location = (TextView) findViewById(R.id.tvLocation);
+
+            photos = findPhotos(new Date(Long.MIN_VALUE), new Date(), "", "", "");
+            DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
+            tv_timestamp.setText(dateFormat.format(new Date()));
+            tv_location.setText("(Lat) " + lastKnown.getLatitude() + "\n(Lng) " + lastKnown.getLongitude());
         }
     }
 }

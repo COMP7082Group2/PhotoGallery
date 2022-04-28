@@ -25,12 +25,12 @@
 
     <Button
         android:id="@+id/snap"
-        android:layout_width="85dp"
-        android:layout_height="60dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_marginStart="10dp"
         android:layout_marginEnd="194dp"
-        android:layout_marginBottom="48dp"
+        android:layout_marginBottom="60dp"
         android:onClick="takePhoto"
         android:text="snap"
         app:layout_constraintBottom_toBottomOf="parent"
