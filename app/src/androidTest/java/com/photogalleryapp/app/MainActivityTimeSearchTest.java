@@ -53,7 +53,7 @@ public class MainActivityTimeSearchTest {
         imgDir.mkdirs();
 
         String log = "49.28373802133578";
-        String lat = "123.11467544444673";
+        String lat = "-123.1207375";
         String fileNameFormat = "_oldImage_" + "19830419_101010_" + log + "_"+ lat +".jpg";
         File imageFileName = new File(imgDir, fileNameFormat);
         Bitmap bmp = Bitmap.createBitmap(800, 600, Bitmap.Config.RGB_565);
@@ -82,6 +82,14 @@ public class MainActivityTimeSearchTest {
         ViewInteraction appCompatEditText7 = onView(withId(R.id.etToDateTime));
         appCompatEditText7.perform(replaceText("1989‐20‐20 06:00:00"));
         appCompatEditText7.perform(closeSoftKeyboard());
+
+        ViewInteraction longitudeInteraction = onView(withId(R.id.etLatitude));
+        longitudeInteraction.perform(replaceText("49.2827"));
+        longitudeInteraction.perform(closeSoftKeyboard());
+
+        ViewInteraction latitudeInteraction = onView(withId(R.id.etLongitude));
+        latitudeInteraction.perform(replaceText("-123.1207375"));
+        latitudeInteraction.perform(closeSoftKeyboard());
 
         ViewInteraction materialButton2 = onView(
                 allOf(withId(R.id.go), withText("Go"),

@@ -53,7 +53,7 @@ public class MainActivityLocationSearchTest {
         File imgDir = new File(
                 Environment.getExternalStorageDirectory().getAbsoluteFile(),
                 "/Android/data/com.photogalleryapp.app/files/Pictures");
-
+        imgDir.delete();
         imgDir.mkdirs();
 
         String log = "49.2827";
@@ -76,7 +76,7 @@ public class MainActivityLocationSearchTest {
         ViewInteraction materialButton = onView(
                 allOf(withId(R.id.btnSearch), withText("SEARCH"),
                         isDisplayed()));
-        materialButton.perform(scrollTo()).perform(click());
+        materialButton.perform(click());
 
         ViewInteraction appCompatEditText = onView(
                 allOf(withId(R.id.etKeywords),
@@ -92,11 +92,11 @@ public class MainActivityLocationSearchTest {
         appCompatEditText7.perform(replaceText("2022-05‐01 00:00:00"));
         appCompatEditText7.perform(closeSoftKeyboard());
 
-        ViewInteraction longitudeInteraction = onView(withId(R.id.etLongitude));
+        ViewInteraction longitudeInteraction = onView(withId(R.id.etLatitude));
         longitudeInteraction.perform(replaceText("49.2827"));
         longitudeInteraction.perform(closeSoftKeyboard());
 
-        ViewInteraction latitudeInteraction = onView(withId(R.id.etLatitude));
+        ViewInteraction latitudeInteraction = onView(withId(R.id.etLongitude));
         latitudeInteraction.perform(replaceText("-123.1207375"));
         latitudeInteraction.perform(closeSoftKeyboard());
 
@@ -107,6 +107,4 @@ public class MainActivityLocationSearchTest {
 
         onView(withId(R.id.etCaption)).check(matches(withText("testLocation")));
     }
-
-
 }
