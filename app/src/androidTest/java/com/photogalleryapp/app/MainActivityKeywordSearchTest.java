@@ -49,11 +49,11 @@ public class MainActivityKeywordSearchTest {
         File imgDir = new File(
                 Environment.getExternalStorageDirectory().getAbsoluteFile(),
                 "/Android/data/com.photogalleryapp.app/files/Pictures");
-
+        imgDir.delete();
         imgDir.mkdirs();
 
         String log = "49.28373802133578";
-        String lat = "123.11467544444673";
+        String lat = "-123.1207375";
         String fileNameFormat = "_testKeyword_" + "19930419_101010_" + log + "_"+ lat +".jpg";
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         File imageFileName = new File(imgDir, fileNameFormat);
@@ -71,7 +71,7 @@ public class MainActivityKeywordSearchTest {
     @Test
     public void mainActivityKeywordSearchTest() {
         ViewInteraction materialButton = onView(
-                allOf(withId(R.id.btnSearch), withText("search"),
+                allOf(withId(R.id.btnSearch), withText("SEARCH"),
                         isDisplayed()));
         materialButton.perform(click());
 
@@ -90,8 +90,16 @@ public class MainActivityKeywordSearchTest {
         appCompatEditText7.perform(replaceText("1995‐20‐20 06:00:00"));
         appCompatEditText7.perform(closeSoftKeyboard());
 
+        ViewInteraction longitudeInteraction = onView(withId(R.id.etLatitude));
+        longitudeInteraction.perform(replaceText("49.2827"));
+        longitudeInteraction.perform(closeSoftKeyboard());
+
+        ViewInteraction latitudeInteraction = onView(withId(R.id.etLongitude));
+        latitudeInteraction.perform(replaceText("-123.1207375"));
+        latitudeInteraction.perform(closeSoftKeyboard());
+
         ViewInteraction materialButton2 = onView(
-                allOf(withId(R.id.go), withText("Go"),
+                allOf(withId(R.id.go), withText("GO"),
                         isDisplayed()));
         materialButton2.perform(click());
 

@@ -4,9 +4,12 @@ import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static androidx.test.espresso.action.ViewActions.replaceText;
+import static androidx.test.espresso.action.ViewActions.scrollTo;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.ViewMatchers.isClickable;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withParent;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 
@@ -14,7 +17,10 @@ import static org.hamcrest.Matchers.allOf;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Environment;
+import android.view.View;
 
+import androidx.test.espresso.UiController;
+import androidx.test.espresso.ViewAction;
 import androidx.test.espresso.ViewInteraction;
 import androidx.test.filters.LargeTest;
 import androidx.test.rule.ActivityTestRule;
@@ -32,7 +38,7 @@ import java.io.OutputStream;
 
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class mainActivityLocationSearchTest {
+public class MainActivityLocationSearchTest {
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class);
@@ -47,12 +53,12 @@ public class mainActivityLocationSearchTest {
         File imgDir = new File(
                 Environment.getExternalStorageDirectory().getAbsoluteFile(),
                 "/Android/data/com.photogalleryapp.app/files/Pictures");
-
+        imgDir.delete();
         imgDir.mkdirs();
 
-        String log = "49.28373802133578";
-        String lat = "123.11467544444673";
-        String fileNameFormat = "_testKeyword_" + "19930419_101010_" + log + "_"+ lat +".jpg";
+        String log = "49.2827";
+        String lat = "-123.1207375";
+        String fileNameFormat = "_testLocation_" + "20220419_101010_" + log + "_" + lat + ".jpg";
         File imageFileName = new File(imgDir, fileNameFormat);
         Bitmap bmp = Bitmap.createBitmap(800, 600, Bitmap.Config.RGB_565);
 
@@ -68,7 +74,7 @@ public class mainActivityLocationSearchTest {
     @Test
     public void mainActivityLocationSearchTest() {
         ViewInteraction materialButton = onView(
-                allOf(withId(R.id.btnSearch), withText("search"),
+                allOf(withId(R.id.btnSearch), withText("SEARCH"),
                         isDisplayed()));
         materialButton.perform(click());
 
@@ -86,10 +92,18 @@ public class mainActivityLocationSearchTest {
         appCompatEditText7.perform(replaceText("2022-05‐01 00:00:00"));
         appCompatEditText7.perform(closeSoftKeyboard());
 
-        ViewInteraction materialButton2 = onView(
-                allOf(withId(R.id.go), withText("Go"),
+        ViewInteraction longitudeInteraction = onView(withId(R.id.etLatitude));
+        longitudeInteraction.perform(replaceText("49.2827"));
+        longitudeInteraction.perform(closeSoftKeyboard());
+
+        ViewInteraction latitudeInteraction = onView(withId(R.id.etLongitude));
+        latitudeInteraction.perform(replaceText("-123.1207375"));
+        latitudeInteraction.perform(closeSoftKeyboard());
+
+        ViewInteraction goButton = onView(
+                allOf(withId(R.id.go), withText("GO"),
                         isDisplayed()));
-        materialButton2.perform(click());
+        goButton.perform(click());
 
         onView(withId(R.id.etCaption)).check(matches(withText("testLocation")));
     }

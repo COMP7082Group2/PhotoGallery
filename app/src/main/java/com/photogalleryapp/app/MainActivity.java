@@ -47,8 +47,8 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> photos = null;
     private int index = 0;
 
-    private LocationTracker tracker = new LocationTracker();
-    private Location lastKnown;
+    public LocationTracker tracker = new LocationTracker();
+    public static Location lastKnown;
 
     @SuppressLint("NewApi")
     @Override
@@ -186,8 +186,11 @@ public class MainActivity extends AppCompatActivity {
     public void doSearch(View v) {
         Intent intent = new Intent(this, SearchActivity.class);
         lastKnown = tracker.getLocation();
-        intent.putExtra("CURR_LONGITUDE", lastKnown.getLongitude() + "");
-        intent.putExtra("CURR_LATITUDE", lastKnown.getLatitude() + "");
+        if(lastKnown != null){
+            intent.putExtra("CURR_LONGITUDE", lastKnown.getLongitude() + "");
+            intent.putExtra("CURR_LATITUDE", lastKnown.getLatitude() + "");
+        }
+
         //startActivity(intent);
         startActivityForResult(intent, SEARCH_ACTIVITY_REQUEST_CODE);
     }
