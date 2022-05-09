@@ -23,6 +23,8 @@ import androidx.test.filters.LargeTest;
 import androidx.test.rule.ActivityTestRule;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.photogalleryapp.app.view.MainActivity;
+
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
@@ -34,8 +36,6 @@ import org.junit.runner.RunWith;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 @LargeTest
 @RunWith(AndroidJUnit4.class)

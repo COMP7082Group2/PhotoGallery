@@ -1,4 +1,4 @@
-package com.photogalleryapp.app;
+package com.photogalleryapp.app.view;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -24,13 +24,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.microsoft.appcenter.AppCenter;
-import com.microsoft.appcenter.analytics.Analytics;
-import com.microsoft.appcenter.crashes.Crashes;
+import com.photogalleryapp.app.util.LocationTracker;
+import com.photogalleryapp.app.R;
+import com.photogalleryapp.app.SearchActivity;
+import com.photogalleryapp.app.presenter.GalleryPresenter;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     String mCurrentPhotoPath;
     private ArrayList<String> photos = null;
     private int index = 0;
+    private GalleryPresenter presenter = null;
 
     public LocationTracker tracker = new LocationTracker();
     public static Location lastKnown;
@@ -56,17 +54,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         //Load photos stored in the server
-        photos = findPhotos(new Date(Long.MIN_VALUE), new Date(), "", "", "");
-
-        if (photos.size() == 0) {
-            displayPhoto(null);
-        } else {
-            displayPhoto(photos.get(index));
-        }
-
-        AppCenter.start(getApplication(), "0d845a00-10c7-4351-bcc6-d989912ae356",
-                Analytics.class, Crashes.class);
-
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -82,106 +69,107 @@ public class MainActivity extends AppCompatActivity {
         locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER, 5000, 10, tracker);
 
+        presenter = new GalleryPresenter(this);
+        int photoSize = presenter.getLastPhotoSize();
+        if (photoSize > 0){
+            String ss = presenter.getFilePathByIndex(photoSize-1);
+            displayPhoto(ss);
+        }
+
+
+//
+//        if (presenter.photos.size() == 0) {
+//            displayPhoto(null);
+//        } else {
+//            displayPhoto(photos.get(index));
+//        }
+
     }
 
     public void takePhoto(View v) {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            File photoFile = null;
-            try {
-                photoFile = createImageFile();
-            } catch (IOException ex) {
-                // Error occurred while creating the File
-            }
-            // Continue only if the File was successfully created
-            if (photoFile != null) {
-                Uri photoURI = FileProvider.getUriForFile(this,
-                        "com.photogalleryapp.app.fileprovider",
-                        photoFile);
-
-                photos.add(photoFile.getPath());
-                index = photos.size() - 1;
-
-                EditText et = (EditText) findViewById(R.id.etCaption);
-                et.setText("caption");
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-            }
+            EditText caption = (EditText) findViewById(R.id.etCaption);
+            caption.setText("caption");
+            lastKnown = tracker.getLocation();
+            takePictureIntent = presenter.takePhoto(takePictureIntent, lastKnown);
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
         }
     }
 
-    private ArrayList<String> findPhotos(Date startTimestamp, Date endTimestamp, String keywords, String latitude, String longitude) {
-        File file = new File(Environment.getExternalStorageDirectory()
-                .getAbsolutePath(), "/Android/data/com.photogalleryapp.app/files/Pictures");
-
-        String currentImage = (photos == null || index >= photos.size()) ? null : photos.get(index);
-        ArrayList<String> photos = new ArrayList<String>();
-        File[] fList = file.listFiles();
-
-        DateFormat format = new SimpleDateFormat("yyyyMMdd_HHmmss");
-        double searchLongitude, searchLatitude;
-        //Location searchLocation;
-
-        searchLongitude = (longitude != "") ? Double.parseDouble(longitude) : 0;
-        searchLatitude = (latitude != "") ? Double.parseDouble(latitude) : 0;
-        //searchLocation = new Location("Search Location");
-        //searchLocation.setLongitude(searchLongitude);
-        //searchLocation.setLatitude(searchLatitude);
-
-
-        if (fList != null) {
-            try {
-                for (File f : fList) {
-
-                    String[] attr = f.getPath().split("_");
-                    String fileName = attr[2] + "_" + attr[3];
-
-                    double fileLongitude = 0, fileLatitude = 0;
-
-                    if (attr.length > 4) {
-                        fileLatitude = Double.parseDouble(attr[4]);
-                    }
-                    if (attr.length > 5) {
-                        fileLongitude = Double.parseDouble(attr[5].replace(".jpg", ""));
-                    }
-                    // if keyword coordinates were not specified, add the file to the list.
-                    if (longitude == "") {
-                        searchLongitude = fileLongitude;
-                    }
-                    if (latitude == "") {
-                        searchLatitude = fileLatitude;
-                    }
-                    //Location fileLocation = new Location("File Location");
-                    //fileLocation.setLongitude(fileLongitude);
-                    //fileLocation.setLatitude(fileLatitude);
-
-                    float[] result = new float[1];
-                    Location.distanceBetween(fileLatitude, fileLongitude, searchLatitude, searchLongitude, result);
-                    boolean within50km = false;
-
-                    if (result[0] < 50000) {
-                        // distance between first and second location is less than 50km
-                        within50km = true;
-                    }
-                    //39.256 123.210
-                    Date fileDate = format.parse(fileName);
-
-                    if (((startTimestamp == null && endTimestamp == null) ||
-                            (fileDate.getTime() >= startTimestamp.getTime() && fileDate.getTime() <= endTimestamp.getTime())
-                    ) && (keywords == "" || f.getPath().contains(keywords))
-                            && within50km) {
-                        if (currentImage != null && f.getPath().compareTo(currentImage) == 0)
-                            index = photos.size();
-
-                        photos.add(f.getPath());
-                    }
-                }
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }
-        return photos;
-    }
+//    private ArrayList<String> findPhotos(Date startTimestamp, Date endTimestamp, String keywords, String latitude, String longitude) {
+//        File file = new File(Environment.getExternalStorageDirectory()
+//                .getAbsolutePath(), "/Android/data/com.photogalleryapp.app/files/Pictures");
+//
+//        String currentImage = (photos == null || index >= photos.size()) ? null : photos.get(index);
+//        ArrayList<String> photos = new ArrayList<String>();
+//        File[] fList = file.listFiles();
+//
+//        DateFormat format = new SimpleDateFormat("yyyyMMdd_HHmmss");
+//        double searchLongitude, searchLatitude;
+//        //Location searchLocation;
+//
+//        searchLongitude = (longitude != "") ? Double.parseDouble(longitude) : 0;
+//        searchLatitude = (latitude != "") ? Double.parseDouble(latitude) : 0;
+//        //searchLocation = new Location("Search Location");
+//        //searchLocation.setLongitude(searchLongitude);
+//        //searchLocation.setLatitude(searchLatitude);
+//
+//
+//        if (fList != null && fList.length > 0) {
+//            try {
+//                for (File f : fList) {
+//
+//                    String[] attr = f.getPath().split("_");
+//                    String fileName = attr[2] + "_" + attr[3];
+//
+//                    double fileLongitude = 0, fileLatitude = 0;
+//
+//                    if (attr.length > 4) {
+//                        fileLatitude = Double.parseDouble(attr[4]);
+//                    }
+//                    if (attr.length > 5) {
+//                        fileLongitude = Double.parseDouble(attr[5].replace(".jpg", ""));
+//                    }
+//                    // if keyword coordinates were not specified, add the file to the list.
+//                    if (longitude == "") {
+//                        searchLongitude = fileLongitude;
+//                    }
+//                    if (latitude == "") {
+//                        searchLatitude = fileLatitude;
+//                    }
+//                    //Location fileLocation = new Location("File Location");
+//                    //fileLocation.setLongitude(fileLongitude);
+//                    //fileLocation.setLatitude(fileLatitude);
+//
+//                    float[] result = new float[1];
+//                    Location.distanceBetween(fileLatitude, fileLongitude, searchLatitude, searchLongitude, result);
+//                    boolean within50km = false;
+//
+//                    if (result[0] < 50000) {
+//                        // distance between first and second location is less than 50km
+//                        within50km = true;
+//                    }
+//                    //39.256 123.210
+//                    Date fileDate = format.parse(fileName);
+//
+//                    if (((startTimestamp == null && endTimestamp == null) ||
+//                            (fileDate.getTime() >= startTimestamp.getTime() && fileDate.getTime() <= endTimestamp.getTime())
+//                    ) && (keywords == "" || f.getPath().contains(keywords))
+//                            && within50km) {
+//                        if (currentImage != null && f.getPath().compareTo(currentImage) == 0)
+//                            index = photos.size();
+//
+//                        photos.add(f.getPath());
+//                    }
+//                }
+//            } catch (ParseException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//        return photos;
+//    }
 
     public void doSearch(View v) {
         Intent intent = new Intent(this, SearchActivity.class);
@@ -198,24 +186,18 @@ public class MainActivity extends AppCompatActivity {
     public void scrollPhotos(View v) {
         String newPath = updatePhoto(photos.get(index), ((EditText) findViewById(R.id.etCaption)).getText().toString());
         photos.set(index, newPath);
+
         switch (v.getId()) {
             case R.id.btnPrev:
-                if (index > 0) {
-                    index--;
-                } else {
-                    index = photos.size() - 1;
-                }
+                presenter.handleNavigationInput("ScrollLeft");
                 break;
             case R.id.btnNext:
-                if (index < (photos.size() - 1)) {
-                    index++;
-                } else {
-                    index = 0;
-                }
+                presenter.handleNavigationInput("ScrollRight");
                 break;
             default:
                 break;
         }
+
         displayPhoto(photos.get(index));
     }
 
@@ -281,6 +263,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return null;
     }
+
     public void shareImageFile(View v) {
         ImageView iv = (ImageView) findViewById(R.id.ivGallery);
         Drawable mDrawable = iv.getDrawable();
@@ -322,13 +305,13 @@ public class MainActivity extends AppCompatActivity {
                 //Keyword
                 String keywords = (String) data.getStringExtra("KEYWORDS");
                 index = 0;
-                photos = findPhotos(startTimestamp, endTimestamp, keywords, latitude, longitude);
-
-                if (photos.size() == 0) {
-                    displayPhoto(null);
-                } else {
-                    displayPhoto(photos.get(index));
-                }
+//                photos = findPhotos(startTimestamp, endTimestamp, keywords, latitude, longitude);
+//
+//                if (photos.size() == 0) {
+//                    displayPhoto(null);
+//                } else {
+//                    displayPhoto(photos.get(index));
+//                }
             }
         }
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
@@ -338,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
             TextView tv_timestamp = (TextView) findViewById(R.id.tvTimestamp);
             TextView tv_location = (TextView) findViewById(R.id.tvLocation);
 
-            photos = findPhotos(new Date(Long.MIN_VALUE), new Date(), "", "", "");
+//            photos = findPhotos(new Date(Long.MIN_VALUE), new Date(), "", "", "");
             DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
             tv_timestamp.setText(dateFormat.format(new Date()));
             tv_location.setText("(Lat) " + lastKnown.getLatitude() + "\n(Lng) " + lastKnown.getLongitude());
