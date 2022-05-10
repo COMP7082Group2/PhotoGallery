@@ -1,6 +1,7 @@
 package com.photogalleryapp.app.model.photo;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
 import java.io.File;
 
@@ -16,6 +17,11 @@ public class Photo {
         this.photoFile = photoFile;
         this.photodetail = photodetail;
     }
+    public void setPhotoDetail(PhotoDetail photodetail){ this.photodetail = photodetail;}
+
+    public PhotoDetail getPhotoDetail(){ return this.photodetail; }
+
+    public Bitmap getBitmap() { return BitmapFactory.decodeFile(getPath()); }
 
     public File getPhotoFile() {
         return photoFile;

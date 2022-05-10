@@ -13,6 +13,7 @@ import android.widget.EditText;
 import androidx.core.content.FileProvider;
 
 import com.photogalleryapp.app.model.photo.PhotoDetail;
+import com.photogalleryapp.app.model.search.Search;
 import com.photogalleryapp.app.util.LocationTracker;
 import com.photogalleryapp.app.R;
 import com.photogalleryapp.app.model.photo.Photo;
@@ -28,22 +29,27 @@ import java.util.Arrays;
 import java.util.Date;
 
 public class GalleryPresenter {
+    private View view;
     private Activity context;
     private PhotoRepository repository;
     private ArrayList<Photo> photos  = null;
-    static final int REQUEST_IMAGE_CAPTURE = 1;
+
+    public static final int REQUEST_IMAGE_CAPTURE = 1;
+    public static final int SEARCH_ACTIVITY_REQUEST_CODE = 2;
+
     String mCurrentPhotoPath;
 
-    String LOCAL_FILE_PATH = "/Android/data/com.photogalleryapp.app/files/Pictures";
     String FILE_AUTH_PATH  = "com.photogalleryapp.app.fileprovider";
 
     private int index = 0;
 
-    public GalleryPresenter(Activity context) {
+    public GalleryPresenter(Activity context, View view) {
         this.context = context;
+        this.view = view;
         repository = new PhotoRepository(context);
-
-        initPhotos();
+        photos = repository.findPhotos();
+        if (photos.size() > 0)
+            getPhotoByIndex(index);
     }
 
     public Intent takePhoto(Intent intent, Location location) {
@@ -64,46 +70,57 @@ public class GalleryPresenter {
         return photos.size();
     }
 
-    private void initPhotos(){
-        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), LOCAL_FILE_PATH);
-        File[] fList = file.listFiles();
-        photos = new ArrayList<Photo>();
+    public void getPhotoByIndex(int index){
+        Photo selected = photos.get(index);
+        PhotoDetail detail = selected.getPhotoDetail();
+        view.displayPhoto(
+                selected.getBitmap(),
+                detail.getCaption(),
+                detail.getTimeStamp(),
+                detail.getLatitude(),
+                detail.getLongitude());
+    }
 
-        if (fList != null && fList.length > 0) {
-            try {
-                for (File f : fList) {
-                    String[] attr = f.getPath().split("_");
-                    double fileLongitude = 0, fileLatitude = 0;
+    public void updatePhoto(String caption) {
+        if (caption.isEmpty())
+            return;
 
-                    if (attr.length > 4)
-                        fileLatitude = Double.parseDouble(attr[4]);
+        Photo selected = photos.get(index);
+        PhotoDetail detail = selected.getPhotoDetail();
+        String path = selected.getPath();
 
-                    if (attr.length > 5)
-                        fileLongitude = Double.parseDouble(attr[5].replace(".jpg", ""));
+        String[] attr = path.split("_");
 
-                    PhotoDetail detail = new PhotoDetail(attr[2], attr[3], fileLatitude, fileLongitude);
-                    photos.add(new Photo(f, detail));
-                }
-            }
-            catch(Exception ex)
-            {
+        //name not changed
+        String originalCaption = attr[1];
+        if (originalCaption.equals(caption))
+            return;
 
-            }
+        String newName = "_" +
+                caption + "_" +
+                attr[2] + "_" +
+                attr[3] + "_" +
+                attr[4] + "_" +
+                attr[5] + "_" +
+                attr[6];
+
+        detail.setCaption(caption);
+        selected.setPhotoDetail(detail);
+
+        if (newName != path){
+            if(!newName.endsWith(".jpg"))
+                newName = newName + ".jpg";
+
+            File from = new File(path);
+            File to = new File(newName);
+            if(from.exists())
+                from.renameTo(to);
+
+            photos.set(index, selected);
         }
     }
-
-    public String getFilePathByIndex(int index){
-
-            return photos.get(index).getPath();
-
-    }
-
-//    public ArrayList<Photo> findPhotos(
-//            Date startTimestamp,
-//            Date endTimestamp,
-//            String keywords,
-//            String latitude,
-//            String longitude) {
+//
+//    public ArrayList<Photo> findPhotos(Search search) {
 //
 //        File file = new File(Environment.getExternalStorageDirectory()
 //                .getAbsolutePath(), "");
@@ -184,33 +201,89 @@ public class GalleryPresenter {
                 photoFile.getPhotoFile());
     }
 
-    public void scrollLeft() {
-        if(index > 0) {
+    public int scrollLeft() {
+        if (index > 0) {
             this.index--;
         }
+        return this.index;
     }
 
-    public void scrollRight() {
-        if(index < (photos.size() -1)) {
+    public int scrollRight() {
+        if (index < (photos.size() -1)) {
             this.index++;
+        }
+        return this.index;
+    }
+
+    public int search(Search search) {
+        // TODO: add datetime search, location
+        int result = -1;
+        for (Photo photo : photos) {
+            PhotoDetail detail = photo.getPhotoDetail();
+            if (search.keyword == "" || detail.caption.contains(search.keyword)) {
+                result = photos.indexOf(photo);
+            }
+        }
+        return result;
+    }
+
+    public void onReturn(int requestCode, int resultCode, Intent data) {
+        switch(requestCode){
+            case SEARCH_ACTIVITY_REQUEST_CODE:
+                //Timestamp
+                DateFormat format = new SimpleDateFormat("yyyy‐MM‐dd HH:mm:ss");
+                Date startTimestamp , endTimestamp;
+
+                try {
+                    String from = (String) data.getStringExtra("STARTTIMESTAMP");
+                    String to = (String) data.getStringExtra("ENDTIMESTAMP");
+                    startTimestamp = format.parse(from);
+                    endTimestamp = format.parse(to);
+                } catch (Exception ex) {
+                    startTimestamp = null;
+                    endTimestamp = null;
+                }
+                //Location
+                String longitude = (String) data.getStringExtra("LONGITUDE");
+                String latitude = (String) data.getStringExtra("LATITUDE");
+
+                double searchLongitude, searchLatitude;
+
+                searchLongitude = (longitude != "") ? Double.parseDouble(longitude) : 0;
+                searchLatitude = (latitude != "") ? Double.parseDouble(latitude) : 0;
+
+                //Keyword
+                String keywords = (String) data.getStringExtra("KEYWORDS");
+                Search search = new Search(startTimestamp, endTimestamp, keywords, searchLatitude, searchLongitude);
+                int result = search(search);
+                if (result != -1)
+                    getPhotoByIndex(result);
+                else {
+                    // TODO: add alert
+                    //no result
+                }
+                break;
+            case REQUEST_IMAGE_CAPTURE:
+                //set index to added photo
+                index = photos.size()-1;
+                photos = repository.findPhotos();
+                getPhotoByIndex(index);
+                break;
         }
     }
 
-    public void search() {  }
-    public void onReturn(int requestCode, int resultCode, Intent data) {
-
-    }
-
-    public void handleNavigationInput(String navigationAction)  {
+    public int handleNavigationInput(String navigationAction)  {
         switch (navigationAction){
             case "ScrollLeft":
-                scrollLeft();
+                return scrollLeft();
             case "ScrollRight":
-                scrollRight();
+                return scrollRight();
+            default:
+                return this.index;
         }
     }
 
     public interface View {
-        public void displayPhoto(Bitmap photo, String caption, String timestamp, boolean isFirst, boolean isLast);
+        public void displayPhoto(Bitmap photo, String caption, String timestamp, double latitude, double longitude);
     }
 }

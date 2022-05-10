@@ -33,7 +33,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SearchActivity"
+            android:name=".view.SearchActivity"
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.DEFAULT" />
