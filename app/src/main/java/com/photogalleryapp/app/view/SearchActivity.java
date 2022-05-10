@@ -1,10 +1,13 @@
-package com.photogalleryapp.app;
+package com.photogalleryapp.app.view;
 
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+
+import com.photogalleryapp.app.R;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;

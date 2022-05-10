@@ -24,7 +24,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PhotoGalleryApp" >
         <activity
-            android:name=".MainActivity"
+            android:name=".view.MainActivity"
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -33,7 +33,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SearchActivity"
+            android:name=".view.SearchActivity"
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.DEFAULT" />

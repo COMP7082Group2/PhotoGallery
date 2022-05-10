@@ -1,4 +1,4 @@
-package com.photogalleryapp.app;
+package com.photogalleryapp.app.util;
 
 import android.location.Location;
 import android.location.LocationListener;
