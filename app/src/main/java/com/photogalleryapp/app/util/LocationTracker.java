@@ -11,10 +11,23 @@ import java.util.List;
 
 public class LocationTracker implements LocationListener
 {
+    private static LocationTracker instance;
+
     private Location lastLoc;
 
     public Location getLocation() {
         return lastLoc;
+    }
+
+    private LocationTracker() {
+
+    }
+
+    public static LocationTracker getInstance() {
+        if(instance == null)
+            instance = new LocationTracker();
+
+        return instance;
     }
 
     @Override
