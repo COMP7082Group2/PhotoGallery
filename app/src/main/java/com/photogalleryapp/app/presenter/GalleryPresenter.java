@@ -1,32 +1,27 @@
 package com.photogalleryapp.app.presenter;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.location.Location;
 import android.net.Uri;
-import android.os.Environment;
+import android.os.Build;
 import android.provider.MediaStore;
-import android.widget.EditText;
 
+import androidx.annotation.RequiresApi;
 import androidx.core.content.FileProvider;
 
 import com.photogalleryapp.app.model.photo.PhotoDetail;
 import com.photogalleryapp.app.model.search.Search;
-import com.photogalleryapp.app.util.LocationTracker;
-import com.photogalleryapp.app.R;
 import com.photogalleryapp.app.model.photo.Photo;
 import com.photogalleryapp.app.model.photo.PhotoRepository;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 public class GalleryPresenter {
     private View view;
@@ -43,6 +38,7 @@ public class GalleryPresenter {
 
     private int index = 0;
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public GalleryPresenter(Activity context, View view) {
         this.context = context;
         this.view = view;
@@ -66,8 +62,8 @@ public class GalleryPresenter {
         return intent;
     }
 
-    public int getLastPhotoSize(){
-        return photos.size();
+    public String getCurrentPhotoCaption(){
+        return photos.get(index).getPhotoDetail().getCaption();
     }
 
     public void getPhotoByIndex(int index){
@@ -96,7 +92,7 @@ public class GalleryPresenter {
         if (originalCaption.equals(caption))
             return;
 
-        String newName = "_" +
+        String newName = attr[0] + "_" +
                 caption + "_" +
                 attr[2] + "_" +
                 attr[3] + "_" +
@@ -108,92 +104,17 @@ public class GalleryPresenter {
         selected.setPhotoDetail(detail);
 
         if (newName != path){
-            if(!newName.endsWith(".jpg"))
+            if (!newName.endsWith(".jpg"))
                 newName = newName + ".jpg";
 
             File from = new File(path);
             File to = new File(newName);
-            if(from.exists())
+            if (from.exists())
                 from.renameTo(to);
 
             photos.set(index, selected);
         }
     }
-//
-//    public ArrayList<Photo> findPhotos(Search search) {
-//
-//        File file = new File(Environment.getExternalStorageDirectory()
-//                .getAbsolutePath(), "");
-//
-//        Photo currentImage = (photos == null || index >= photos.size()) ? null : photos.get(index);
-//        ArrayList<String> photos = new ArrayList<String>();
-//        File[] fList = file.listFiles();
-//
-//        DateFormat format = new SimpleDateFormat("yyyyMMdd_HHmmss");
-//        double searchLongitude, searchLatitude;
-//        //Location searchLocation;
-//
-//        searchLongitude = (longitude != "") ? Double.parseDouble(longitude) : 0;
-//        searchLatitude = (latitude != "") ? Double.parseDouble(latitude) : 0;
-//        //searchLocation = new Location("Search Location");
-//        //searchLocation.setLongitude(searchLongitude);
-//        //searchLocation.setLatitude(searchLatitude);
-//
-//
-//        if (fList != null && fList.length > 0) {
-//            try {
-//                for (File f : fList) {
-//
-//                    String[] attr = f.getPath().split("_");
-//                    String fileName = attr[2] + "_" + attr[3];
-//
-//                    double fileLongitude = 0, fileLatitude = 0;
-//
-//                    if (attr.length > 4) {
-//                        fileLatitude = Double.parseDouble(attr[4]);
-//                    }
-//                    if (attr.length > 5) {
-//                        fileLongitude = Double.parseDouble(attr[5].replace(".jpg", ""));
-//                    }
-//                    // if keyword coordinates were not specified, add the file to the list.
-//                    if (longitude == "") {
-//                        searchLongitude = fileLongitude;
-//                    }
-//                    if (latitude == "") {
-//                        searchLatitude = fileLatitude;
-//                    }
-//                    //Location fileLocation = new Location("File Location");
-//                    //fileLocation.setLongitude(fileLongitude);
-//                    //fileLocation.setLatitude(fileLatitude);
-//
-//                    float[] result = new float[1];
-//                    Location.distanceBetween(fileLatitude, fileLongitude, searchLatitude, searchLongitude, result);
-//                    boolean within50km = false;
-//
-//                    if (result[0] < 50000) {
-//                        // distance between first and second location is less than 50km
-//                        within50km = true;
-//                    }
-//                    //39.256 123.210
-//                    Date fileDate = format.parse(fileName);
-//
-//                    if (((startTimestamp == null && endTimestamp == null) ||
-//                            (fileDate.getTime() >= startTimestamp.getTime() && fileDate.getTime() <= endTimestamp.getTime())
-//                    ) && (keywords == "" || f.getPath().contains(keywords))
-//                            && within50km) {
-//                        if (currentImage != null && f.getPath().compareTo(currentImage) == 0)
-//                            index = photos.size();
-//
-//                        photos.add(f.getPath());
-//                    }
-//                }
-//            } catch (ParseException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        return photos;
-//
-//    }
 
     private Uri getPhotoUri(Photo photoFile){
         return  FileProvider.getUriForFile(context,
@@ -215,18 +136,25 @@ public class GalleryPresenter {
         return this.index;
     }
 
+    // Functional Programming feature
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public int search(Search search) {
-        // TODO: add datetime search, location
         int result = -1;
-        for (Photo photo : photos) {
-            PhotoDetail detail = photo.getPhotoDetail();
-            if (search.keyword == "" || detail.caption.contains(search.keyword)) {
-                result = photos.indexOf(photo);
-            }
-        }
+        var found = photos
+                .stream()
+                .filter(p->p.getPhotoDetail().getCaption().contains(search.keyword) ||
+                        ((p.getPhotoDetail().getTimeStampAsDate()).getTime() >= search.startDate.getTime() &&
+                         (p.getPhotoDetail().getTimeStampAsDate()).getTime() <= search.endDate.getTime()) ||
+                        view.withIn50Distance(p.getPhotoDetail().getLatitude(), p.getPhotoDetail().getLongitude(), search.lat, search.lon))
+                .collect(Collectors.toList());
+
+        if (found.size() > 0 )
+            result = photos.indexOf(found.get(0));
+
         return result;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public void onReturn(int requestCode, int resultCode, Intent data) {
         switch(requestCode){
             case SEARCH_ACTIVITY_REQUEST_CODE:
@@ -255,12 +183,13 @@ public class GalleryPresenter {
                 //Keyword
                 String keywords = (String) data.getStringExtra("KEYWORDS");
                 Search search = new Search(startTimestamp, endTimestamp, keywords, searchLatitude, searchLongitude);
+
+                //Search
                 int result = search(search);
                 if (result != -1)
                     getPhotoByIndex(result);
                 else {
-                    // TODO: add alert
-                    //no result
+                    view.showErrorAlert("no result");
                 }
                 break;
             case REQUEST_IMAGE_CAPTURE:
@@ -285,5 +214,7 @@ public class GalleryPresenter {
 
     public interface View {
         public void displayPhoto(Bitmap photo, String caption, String timestamp, double latitude, double longitude);
+        public void showErrorAlert(String errorMsg);
+        public boolean withIn50Distance(double fileLatitude, double fileLongitude, double searchLatitude, double searchLongitude);
     }
 }
