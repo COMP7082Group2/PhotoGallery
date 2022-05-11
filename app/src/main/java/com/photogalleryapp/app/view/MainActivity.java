@@ -33,7 +33,6 @@ public class MainActivity extends AppCompatActivity implements GalleryPresenter.
     private int index = 0;
     private GalleryPresenter presenter = null;
 
-    public LocationTracker tracker = new LocationTracker();
     public static Location lastKnown;
 
     @SuppressLint("NewApi")
@@ -55,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements GalleryPresenter.
             requestPermissions(new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 10);
         }
         locationManager.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER, 5000, 10, tracker);
+                LocationManager.GPS_PROVIDER, 5000, 10, LocationTracker.getInstance());
 
         presenter = new GalleryPresenter(this, this);
     }
@@ -66,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements GalleryPresenter.
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             EditText caption = (EditText) findViewById(R.id.etCaption);
             caption.setText("caption");
-            lastKnown = tracker.getLocation();
+            lastKnown = LocationTracker.getInstance().getLocation();
             takePictureIntent = presenter.takePhoto(takePictureIntent, lastKnown);
             startActivityForResult(takePictureIntent, presenter.REQUEST_IMAGE_CAPTURE);
         }
@@ -74,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements GalleryPresenter.
 
     public void doSearch(View v) {
         Intent intent = new Intent(this, SearchActivity.class);
-        lastKnown = tracker.getLocation();
+        lastKnown = LocationTracker.getInstance().getLocation();
         if(lastKnown != null){
             intent.putExtra("CURR_LONGITUDE", lastKnown.getLongitude() + "");
             intent.putExtra("CURR_LATITUDE", lastKnown.getLatitude() + "");
