@@ -2,12 +2,18 @@ package com.photogalleryapp.app.model.photo;
 
 import android.content.Context;
 import android.location.Location;
+import android.os.Build;
 import android.os.Environment;
+
+import androidx.annotation.RequiresApi;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 
 interface IPhotoRepository {
@@ -47,6 +53,7 @@ public class PhotoRepository implements IPhotoRepository {
         return new Photo(file, detail);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public ArrayList<Photo> findPhotos() {
         File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), LOCAL_FILE_PATH);
@@ -72,6 +79,14 @@ public class PhotoRepository implements IPhotoRepository {
                     PhotoDetail detail = new PhotoDetail(attr[1], date, fileLatitude, fileLongitude);
                     photos.add(new Photo(f, detail));
                 }
+
+                Collections.sort(photos, new Comparator<Photo>(){
+                    public int compare(Photo o1, Photo o2)
+                    {
+                        return (o1.getPhotoDetail().getTimeStampAsDate())
+                                .compareTo(o2.getPhotoDetail().getTimeStampAsDate());
+                    }
+                });
             }
             catch (Exception ex)
             {

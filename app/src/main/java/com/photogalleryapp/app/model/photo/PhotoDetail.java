@@ -42,7 +42,6 @@ public class PhotoDetail {
         return longitude;
     }
 
-
     public void setTimeStamp(String timeStamp) {
         this.timeStamp = timeStamp;
     }
@@ -55,6 +54,16 @@ public class PhotoDetail {
             e.printStackTrace();
         }
         return timeStamp;
+    }
+
+    public Date getTimeStampAsDate(){
+        Date date = new Date();
+        try {
+            date = TIMESTAMP_SAVE_FORMAT.parse(this.timeStamp);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return date;
     }
 
     public String getPhotoFileName() {

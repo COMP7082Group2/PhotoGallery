@@ -3,11 +3,16 @@ package com.photogalleryapp.app.view;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
@@ -15,6 +20,8 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -120,23 +127,55 @@ public class MainActivity extends AppCompatActivity implements GalleryPresenter.
         }
     }
 
+    public void showErrorAlert(String errorMsg){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(errorMsg);
+        builder.setCancelable(true);
 
-    public void shareImageFile(View v) {
-        // TODO: fix sharing
-//        ImageView iv = (ImageView) findViewById(R.id.ivGallery);
-//        Drawable mDrawable = iv.getDrawable();
-//        Bitmap mBitmap = ((BitmapDrawable) mDrawable).getBitmap();
-//        String[] attr = photos.get(index).split("_");
-//        String path = MediaStore.Images.Media.insertImage(getContentResolver(), mBitmap, attr[attr.length-1], null);
-//
-//        Uri uri = Uri.parse(path);
-//        Intent shareIntent = new Intent();
-//        shareIntent.setAction(Intent.ACTION_SEND);
-//        shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
-//        shareIntent.setType("image/jpeg");
-//        startActivity(Intent.createChooser(shareIntent, null));
+        builder.setPositiveButton(
+                "Yes",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                });
+
+        AlertDialog alert11 = builder.create();
+        alert11.show();
     }
 
+    public boolean withIn50Distance(
+            double fileLatitude,
+            double fileLongitude,
+            double searchLatitude,
+            double searchLongitude) {
+        float[] result = new float[1];
+        Location.distanceBetween(fileLatitude, fileLongitude, searchLatitude, searchLongitude, result);
+        boolean isWithin50km = false;
+
+        if (result[0] < 50000) {
+            // distance between first and second location is less than 50km
+            isWithin50km = true;
+        }
+        return isWithin50km;
+    }
+
+    public void shareImageFile(View v) {
+        ImageView iv = (ImageView) findViewById(R.id.ivGallery);
+        Drawable mDrawable = iv.getDrawable();
+        Bitmap mBitmap = ((BitmapDrawable) mDrawable).getBitmap();
+        String photoCaption = presenter.getCurrentPhotoCaption();
+        String path = MediaStore.Images.Media.insertImage(getContentResolver(), mBitmap, photoCaption, null);
+
+        Uri uri = Uri.parse(path);
+        Intent shareIntent = new Intent();
+        shareIntent.setAction(Intent.ACTION_SEND);
+        shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+        shareIntent.setType("image/jpeg");
+        startActivity(Intent.createChooser(shareIntent, null));
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);

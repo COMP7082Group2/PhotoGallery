@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 import java.io.File;
+import java.util.UUID;
 
 public class Photo {
     private File photoFile;
@@ -23,9 +24,7 @@ public class Photo {
 
     public Bitmap getBitmap() { return BitmapFactory.decodeFile(getPath()); }
 
-    public File getPhotoFile() {
-        return photoFile;
-    }
+    public File getPhotoFile() { return photoFile; }
 
     public String getPath(){
         return photoFile.getPath();
