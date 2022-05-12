@@ -86,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements GalleryPresenter.
 
         //when photo scrolls, update photo caption
         EditText newCaption = (EditText)findViewById(R.id.etCaption);
+
         presenter.updatePhoto(newCaption.getText().toString());
 
         switch (v.getId()) {

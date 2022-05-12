@@ -82,38 +82,10 @@ public class GalleryPresenter {
             return;
 
         Photo selected = photos.get(index);
-        PhotoDetail detail = selected.getPhotoDetail();
-        String path = selected.getPath();
 
-        String[] attr = path.split("_");
+        selected = repository.updatePhoto(selected, caption);
 
-        //name not changed
-        String originalCaption = attr[1];
-        if (originalCaption.equals(caption))
-            return;
-
-        String newName = attr[0] + "_" +
-                caption + "_" +
-                attr[2] + "_" +
-                attr[3] + "_" +
-                attr[4] + "_" +
-                attr[5] + "_" +
-                attr[6];
-
-        detail.setCaption(caption);
-        selected.setPhotoDetail(detail);
-
-        if (newName != path){
-            if (!newName.endsWith(".jpg"))
-                newName = newName + ".jpg";
-
-            File from = new File(path);
-            File to = new File(newName);
-            if (from.exists())
-                from.renameTo(to);
-
-            photos.set(index, selected);
-        }
+        photos.set(index, selected);
     }
 
     private Uri getPhotoUri(Photo photoFile){

@@ -18,6 +18,13 @@ public class PhotoDetail {
         this.timeStamp = timeStamp;
     }
 
+    public PhotoDetail(PhotoDetail detail) {
+        this.caption = detail.caption;
+        this.latitude = detail.latitude;
+        this.longitude = detail.longitude;
+        this.timeStamp = detail.timeStamp;
+    }
+
     public void setCaption(String caption) {
         this.caption = caption;
     }
