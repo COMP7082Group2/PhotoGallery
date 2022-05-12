@@ -19,6 +19,7 @@ import java.util.Date;
 interface IPhotoRepository {
     public Photo create(Location location);
     public ArrayList<Photo> findPhotos();
+    public Photo updatePhoto(Photo old, String caption);
 }
 
 public class PhotoRepository implements IPhotoRepository {
@@ -53,6 +54,25 @@ public class PhotoRepository implements IPhotoRepository {
         return new Photo(file, detail);
     }
 
+    private Photo loadPhoto(File f) {
+        String[] attr = f.getPath().split("_");
+        double fileLongitude = 0, fileLatitude = 0;
+
+        String date = attr[2] + "_" + attr[3];
+
+        if (attr.length > 4)
+            fileLatitude = Double.parseDouble(attr[4]);
+
+        if (attr.length > 5)
+            fileLongitude = Double.parseDouble(attr[5]);
+
+        String randomNo = attr[6].replace(".jpg", "");
+
+        PhotoDetail detail = new PhotoDetail(attr[1], date, fileLatitude, fileLongitude);
+
+        return new Photo(f, detail);
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public ArrayList<Photo> findPhotos() {
@@ -63,21 +83,7 @@ public class PhotoRepository implements IPhotoRepository {
         if (fList != null && fList.length > 0) {
             try {
                 for (File f : fList) {
-                    String[] attr = f.getPath().split("_");
-                    double fileLongitude = 0, fileLatitude = 0;
-
-                    String date = attr[2] + "_" + attr[3];
-
-                    if (attr.length > 4)
-                        fileLatitude = Double.parseDouble(attr[4]);
-
-                    if (attr.length > 5)
-                        fileLongitude = Double.parseDouble(attr[5]);
-
-                    String randomNo = attr[6].replace(".jpg", "");
-
-                    PhotoDetail detail = new PhotoDetail(attr[1], date, fileLatitude, fileLongitude);
-                    photos.add(new Photo(f, detail));
+                    photos.add(loadPhoto(f));
                 }
 
                 Collections.sort(photos, new Comparator<Photo>(){
@@ -94,6 +100,44 @@ public class PhotoRepository implements IPhotoRepository {
             }
         }
         return photos;
+    }
+
+    @Override
+    public Photo updatePhoto(Photo selected, String caption) {
+        PhotoDetail detail = selected.getPhotoDetail();
+
+        String path = selected.getPath();
+
+        String[] attr = path.split("_");
+
+        //name not changed
+        String originalCaption = attr[1];
+        if (originalCaption.equals(caption))
+            return selected;
+
+        String newName = attr[0] + "_" +
+                caption + "_" +
+                attr[2] + "_" +
+                attr[3] + "_" +
+                attr[4] + "_" +
+                attr[5] + "_" +
+                attr[6];
+
+        detail.setCaption(caption);
+        selected.setPhotoDetail(detail);
+
+        if (newName == path)
+            return selected;
+
+        if (!newName.endsWith(".jpg"))
+            newName = newName + ".jpg";
+
+        File from = new File(path);
+        File to = new File(newName);
+        if (from.exists())
+            from.renameTo(to);
+
+        return new Photo(to, new PhotoDetail(detail));
     }
 }
 
