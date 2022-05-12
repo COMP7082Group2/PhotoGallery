@@ -6,10 +6,10 @@ import java.util.Date;
 
 public class PhotoDetail {
     private final SimpleDateFormat TIMESTAMP_SAVE_FORMAT = new SimpleDateFormat("yyyyMMdd_HHmmss");
-    public String timeStamp;
-    public String caption;
-    public double latitude;
-    public double longitude;
+    private String timeStamp;
+    private String caption;
+    private double latitude;
+    private double longitude;
 
     public PhotoDetail(String caption, String timeStamp, double latitude, double longitude) {
         this.caption = caption;
