@@ -52,7 +52,7 @@ public class GalleryPresenter {
         Photo photo = repository.create(location);
 
         if (photo != null) {
-            mCurrentPhotoPath = photo.getPath();
+            mCurrentPhotoPath = photo.getPhotoFile().getPath();
             Uri photoURI = getPhotoUri(photo);
             photos.add(photo);
             index = photos.size() - 1;
@@ -70,7 +70,7 @@ public class GalleryPresenter {
         Photo selected = photos.get(index);
         PhotoDetail detail = selected.getPhotoDetail();
         view.displayPhoto(
-                selected.getBitmap(),
+                selected.getPhotoFile().getBitmap(),
                 detail.getCaption(),
                 detail.getTimeStamp(),
                 detail.getLatitude(),
@@ -91,7 +91,7 @@ public class GalleryPresenter {
     private Uri getPhotoUri(Photo photoFile){
         return  FileProvider.getUriForFile(context,
                 FILE_AUTH_PATH,
-                photoFile.getPhotoFile());
+                photoFile.getPhotoFile().getFile());
     }
 
     public int scrollLeft() {

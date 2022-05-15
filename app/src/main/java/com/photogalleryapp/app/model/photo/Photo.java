@@ -7,14 +7,14 @@ import java.io.File;
 import java.util.UUID;
 
 public class Photo {
-    private File photoFile;
+    private PhotoFile photoFile;
     private PhotoDetail photodetail;
 
-    public Photo(File photoFile) {
+    public Photo(PhotoFile photoFile) {
         this.photoFile = photoFile;
     }
     
-    public Photo(File photoFile, PhotoDetail photodetail) {
+    public Photo(PhotoFile photoFile, PhotoDetail photodetail) {
         this.photoFile = photoFile;
         this.photodetail = photodetail;
     }
@@ -22,13 +22,9 @@ public class Photo {
 
     public PhotoDetail getPhotoDetail(){ return this.photodetail; }
 
-    public Bitmap getBitmap() { return BitmapFactory.decodeFile(getPath()); }
+    public PhotoFile getPhotoFile() { return this.photoFile; }
 
-    public File getPhotoFile() { return photoFile; }
 
-    public String getPath(){
-        return photoFile.getPath();
-    }
 }
 
 

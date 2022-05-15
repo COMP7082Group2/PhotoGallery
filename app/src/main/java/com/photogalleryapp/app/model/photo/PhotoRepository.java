@@ -41,16 +41,8 @@ public class PhotoRepository implements IPhotoRepository {
 
         File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 
-        File file = null;
-        try {
-            file = File.createTempFile(
-                    detail.getPhotoFileName(),  /* prefix */
-                    ".jpg",         /* suffix */
-                    storageDir      /* directory */
-            );
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        PhotoFile file = new PhotoFile(detail.getPhotoFileName(), storageDir);
+
         return new Photo(file, detail);
     }
 
@@ -70,7 +62,7 @@ public class PhotoRepository implements IPhotoRepository {
 
         PhotoDetail detail = new PhotoDetail(attr[1], date, fileLatitude, fileLongitude);
 
-        return new Photo(f, detail);
+        return new Photo(new PhotoFile(f), detail);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -106,7 +98,7 @@ public class PhotoRepository implements IPhotoRepository {
     public Photo updatePhoto(Photo selected, String caption) {
         PhotoDetail detail = selected.getPhotoDetail();
 
-        String path = selected.getPath();
+        String path = selected.getPhotoFile().getPath();
 
         String[] attr = path.split("_");
 
@@ -137,7 +129,7 @@ public class PhotoRepository implements IPhotoRepository {
         if (from.exists())
             from.renameTo(to);
 
-        return new Photo(to, new PhotoDetail(detail));
+        return new Photo(new PhotoFile(to), new PhotoDetail(detail));
     }
 }
 
