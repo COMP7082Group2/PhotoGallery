@@ -78,23 +78,19 @@ public class MainActivityLocationSearchTest {
                 allOf(withId(R.id.etKeywords),
                         isDisplayed()));
 
-        appCompatEditText.perform(replaceText("testLocation"), closeSoftKeyboard());
+        appCompatEditText.perform(replaceText("testLocation"));
 
         ViewInteraction appCompatEditText2 = onView(withId(R.id.etFromDateTime));
         appCompatEditText2.perform(replaceText("2022‐04‐01 00:00:00"));
-        appCompatEditText2.perform(closeSoftKeyboard());
 
         ViewInteraction appCompatEditText7 = onView(withId(R.id.etToDateTime));
         appCompatEditText7.perform(replaceText("2022-05‐01 00:00:00"));
-        appCompatEditText7.perform(closeSoftKeyboard());
 
         ViewInteraction longitudeInteraction = onView(withId(R.id.etLatitude));
         longitudeInteraction.perform(replaceText("49.2827"));
-        longitudeInteraction.perform(closeSoftKeyboard());
 
         ViewInteraction latitudeInteraction = onView(withId(R.id.etLongitude));
         latitudeInteraction.perform(replaceText("-123.1207375"));
-        latitudeInteraction.perform(closeSoftKeyboard());
 
         ViewInteraction goButton = onView(
                 allOf(withId(R.id.go), withText("GO"),
