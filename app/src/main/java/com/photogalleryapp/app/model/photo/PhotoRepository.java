@@ -47,7 +47,12 @@ public class PhotoRepository implements IPhotoRepository {
     }
 
     private Photo loadPhoto(File f) {
-        String[] attr = f.getPath().split("_");
+        String fileName = f.getPath();
+
+        //Remove file ext.
+        fileName = fileName.substring(0, fileName.lastIndexOf("."));
+
+        String[] attr = fileName.split("_");
         double fileLongitude = 0, fileLatitude = 0;
 
         String date = attr[2] + "_" + attr[3];
@@ -57,8 +62,6 @@ public class PhotoRepository implements IPhotoRepository {
 
         if (attr.length > 5)
             fileLongitude = Double.parseDouble(attr[5]);
-
-        String randomNo = attr[6].replace(".jpg", "");
 
         PhotoDetail detail = new PhotoDetail(attr[1], date, fileLatitude, fileLongitude);
 
@@ -88,7 +91,7 @@ public class PhotoRepository implements IPhotoRepository {
             }
             catch (Exception ex)
             {
-
+                throw new RuntimeException(ex);
             }
         }
         return photos;

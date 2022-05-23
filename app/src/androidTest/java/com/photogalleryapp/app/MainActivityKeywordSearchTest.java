@@ -80,25 +80,21 @@ public class MainActivityKeywordSearchTest {
         ViewInteraction appCompatEditText = onView(
                 allOf(withId(R.id.etKeywords),
                         isDisplayed()));
-        appCompatEditText.perform(replaceText("testKeyword"), closeSoftKeyboard());
+        appCompatEditText.perform(replaceText("testKeyword"));
 
 
         ViewInteraction appCompatEditText2 = onView(withId(R.id.etFromDateTime));
         appCompatEditText2.perform(replaceText("1990‐01‐17 05:00:00"));
-        appCompatEditText2.perform(closeSoftKeyboard());
 
 
         ViewInteraction appCompatEditText7 = onView(withId(R.id.etToDateTime));
         appCompatEditText7.perform(replaceText("1995‐20‐20 06:00:00"));
-        appCompatEditText7.perform(closeSoftKeyboard());
 
         ViewInteraction longitudeInteraction = onView(withId(R.id.etLatitude));
         longitudeInteraction.perform(replaceText("49.2827"));
-        longitudeInteraction.perform(closeSoftKeyboard());
 
         ViewInteraction latitudeInteraction = onView(withId(R.id.etLongitude));
         latitudeInteraction.perform(replaceText("-123.1207375"));
-        latitudeInteraction.perform(closeSoftKeyboard());
 
         ViewInteraction materialButton2 = onView(
                 allOf(withId(R.id.go), withText("GO"),

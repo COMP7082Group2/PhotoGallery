@@ -114,10 +114,12 @@ public class GalleryPresenter {
         int result = -1;
         var found = photos
                 .stream()
-                .filter(p->p.getPhotoDetail().getCaption().contains(search.keyword) ||
-                        ((p.getPhotoDetail().getTimeStampAsDate()).getTime() >= search.startDate.getTime() &&
-                         (p.getPhotoDetail().getTimeStampAsDate()).getTime() <= search.endDate.getTime()) ||
-                        view.withIn50Distance(p.getPhotoDetail().getLatitude(), p.getPhotoDetail().getLongitude(), search.lat, search.lon))
+                .filter(
+                    p->p.getPhotoDetail().getCaption().contains(search.keyword) &&
+                    (search.startDate == null || p.getPhotoDetail().getTimeStampAsDate().getTime() >= search.startDate.getTime()) &&
+                    (search.endDate == null || p.getPhotoDetail().getTimeStampAsDate() .getTime() <= search.endDate.getTime()) &&
+                    view.withIn50Distance(p.getPhotoDetail().getLatitude(), p.getPhotoDetail().getLongitude(), search.lat, search.lon)
+                )
                 .collect(Collectors.toList());
 
         if (found.size() > 0 )
