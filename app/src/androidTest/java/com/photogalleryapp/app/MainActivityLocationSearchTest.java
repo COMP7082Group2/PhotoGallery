@@ -87,6 +87,8 @@ public class MainActivityLocationSearchTest {
 
 
 
+
+        
         ViewInteraction appCompatEditText7 = onView(withId(R.id.etToDateTime));
         appCompatEditText7.perform(replaceText("2022-05‐01 00:00:00"));
 
