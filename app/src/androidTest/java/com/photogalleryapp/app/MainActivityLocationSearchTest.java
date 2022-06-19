@@ -82,12 +82,7 @@ public class MainActivityLocationSearchTest {
 
         ViewInteraction appCompatEditText2 = onView(withId(R.id.etFromDateTime));
         appCompatEditText2.perform(replaceText("2022‐04‐01 00:00:00"));
-
-
-
-
-
-
+        
         
         ViewInteraction appCompatEditText7 = onView(withId(R.id.etToDateTime));
         appCompatEditText7.perform(replaceText("2022-05‐01 00:00:00"));
