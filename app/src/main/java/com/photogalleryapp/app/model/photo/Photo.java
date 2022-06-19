@@ -25,6 +25,8 @@ public class Photo {
     public PhotoFile getPhotoFile() { return this.photoFile; }
 
 
+    
+
 }
 
 
