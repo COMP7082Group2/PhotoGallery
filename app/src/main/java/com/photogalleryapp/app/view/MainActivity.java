@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity implements GalleryPresenter.
 
     public static Location lastKnown;
 
-    
+
     @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
